@@ -7,6 +7,10 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+
+
+
+
 # Stage 2: Builder
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -21,6 +25,11 @@ ENV NODE_ENV=production
 
 # Build the application
 RUN npm run build
+
+
+
+
+
 
 # Stage 3: Runner (Production)
 FROM node:20-alpine AS runner

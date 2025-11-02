@@ -1,51 +1,55 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: calendar_postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: calendar_user
-      POSTGRES_PASSWORD: calendar_pass
-      POSTGRES_DB: calendar_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./app/lib/db.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U calendar_user -d calendar_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - calendar_network
+    # PostgreSQL Database
+    postgres:
+        image: postgres:16-alpine
+        container_name: calendar_postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: calendar_user
+            POSTGRES_PASSWORD: calendar_pass
+            POSTGRES_DB: calendar_db
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+            - ./app/lib/db.sql:/docker-entrypoint-initdb.d/init.sql
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U calendar_user -d calendar_db"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        networks:
+            - calendar_network
 
-  # Next.js Application (Production)
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runner
-    container_name: calendar_app
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=postgresql://calendar_user:calendar_pass@postgres:5432/calendar_db
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - calendar_network
+    # Next.js Application (Production)
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: runner
+        container_name: calendar_app
+        restart: unless-stopped
+        ports:
+            - "3000:3000"
+        environment:
+            - NODE_ENV=production
+            - DATABASE_URL=postgresql://calendar_user:calendar_pass@postgres:5432/calendar_db
+            - AUTH_SECRET=${AUTH_SECRET}
+            - AUTH_GOOGLE_ID=${AUTH_GOOGLE_ID}
+            - AUTH_GOOGLE_SECRET=${AUTH_GOOGLE_SECRET}
+            - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+        depends_on:
+            postgres:
+                condition: service_healthy
+        networks:
+            - calendar_network
 
 volumes:
-  postgres_data:
-    driver: local
+    postgres_data:
+        driver: local
 
 networks:
-  calendar_network:
-    driver: bridge
+    calendar_network:
+        driver: bridge

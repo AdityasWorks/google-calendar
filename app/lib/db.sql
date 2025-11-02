@@ -2,18 +2,22 @@
 DROP TABLE IF EXISTS events CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- Simple users table
+-- Users table (simplified for JWT-based auth)
 CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name VARCHAR(255),
   email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255) NOT NULL,
+  "emailVerified" TIMESTAMP,
+  image TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Events table
+
+
+-- Events table (updated to use TEXT id for user_id)
 CREATE TABLE events (
   id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
   description TEXT,
   start_time TIMESTAMP NOT NULL,
@@ -29,8 +33,5 @@ CREATE TABLE events (
 -- Indexes
 CREATE INDEX idx_events_user_time ON events(user_id, start_time, end_time);
 CREATE INDEX idx_events_start_time ON events(start_time);
+CREATE INDEX idx_users_email ON users(email);
 
--- Insert default user
-INSERT INTO users (email, name) VALUES 
-('user@example.com', 'Default User')
-ON CONFLICT (email) DO NOTHING;
